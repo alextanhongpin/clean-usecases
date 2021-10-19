@@ -21,6 +21,20 @@ It does not concern itself with
 - implementation details. Each step could be done through composition of different functions, and different flows could share the same step.
 - layers. How you define your layer is up to you. In DDD, domain layer (entity, service, repository, entity, value object etc) is the main abstraction, in clean usecase, usecase layer becomes the main abstraction. We do not care about the details on each entity, we only care how they operate as a whole
 
+
+It is
+- pure abstraction
+- focuses on control flow
+- based on piping data and transforming them from one state to another
+- implementation should be fully testable without depending on persistence or I/O
+- when doing BDD (behaviour driven development), you can initialize the implementation to fulfill the `Given` scenario, so you only tests the `When` and `Then`. E.g. based on the sample below, we can write a test where 
+
+```
+Given a user with valid email and password, 
+When authenticating the user
+Then the password should be encrypted
+```
+
 ## Sample
 
 ```go
