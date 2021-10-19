@@ -10,6 +10,17 @@ However, they introduce a lot of complexity (concepts, as well as layers) that i
 
 Sometimes, we just want to get the job done in a way that is easy to understand.
 
+
+## Principles
+
+Clean usecases is all about control flow - what are the steps that is required to run the usecase to completion.
+
+It does not concern itself with
+- domain model attributes. Unlike DDD, where you create domain models and define attributes, clean usecase only focus on behaviours. Where the data is from is not important.
+- persistence or I/O. Each step is mainly focusing on behaviour/business logic. Data could be injected externally.
+- implementation details. Each step could be done through composition of different functions, and different flows could share the same step.
+- layers. How you define your layer is up to you. 
+
 ## Sample
 
 ```go
