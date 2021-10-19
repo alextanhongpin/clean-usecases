@@ -19,7 +19,7 @@ It does not concern itself with
 - domain model attributes. Unlike DDD, where you create domain models and define attributes, clean usecase only focus on behaviours. Where the data is from is not important.
 - persistence or I/O. Each step is mainly focusing on behaviour/business logic. Data could be injected externally.
 - implementation details. Each step could be done through composition of different functions, and different flows could share the same step.
-- layers. How you define your layer is up to you. 
+- layers. How you define your layer is up to you. In DDD, domain layer (entity, service, repository, entity, value object etc) is the main abstraction, in clean usecase, usecase layer becomes the main abstraction. We do not care about the details on each entity, we only care how they operate as a whole
 
 ## Sample
 
