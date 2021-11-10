@@ -19,6 +19,8 @@ Linux pipe
 ls /bin /usr/bin | sort | uniq | tee abc.txt | grep out
 ```
 
+---
+
 ## Why Pipe?
 
 - without piping, functions needs to be nested
@@ -26,11 +28,14 @@ ls /bin /usr/bin | sort | uniq | tee abc.txt | grep out
 ```go
 foo(bar(baz(new_function(other_function()))))
 ```
+---
 
 Elixir:
 ```elixir
 other_function() |> new_function() |> baz() |> bar() |> foo()
 ```
+
+---
 
 JS promise chain:
 
@@ -44,11 +49,15 @@ doSomething()
 .catch(failureCallback);
 ```
 
+---
+
 ## Disadvantage
 
 - intermediate state is not stored
 - hard to pass dependencies
 - not all language support it (or do they?)
+
+---
 
 ## PIPE in Golang
 
