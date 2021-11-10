@@ -15,9 +15,28 @@ class: center, middle
 # Introduction
 
 Linux pipe
+
 ```bash
 ls /bin /usr/bin | sort | uniq | tee abc.txt | grep out
 ```
+
+often praised for simplicity and doing one thing (SRP)
+
+
+# Problem 
+
+- [ ] large usecase function (few hundred lines)
+- [ ] multiple service calls, different entities and multiple interactions
+- resulting in poor redability
+- difficulty in debugging immediate state, manual log, not testable
+- no clear separation between IO
+- not much is said about business usecase layer
+- DDD and clean architecture focuses more on defining boundaries and logical separation, usecase layer is just treated as one layer
+- DDD concepts are confusing enough, the more you know, your achitecture takes toll on the transformation
+- no two developers share the same understanding
+- stick to the basics, procedural with template pattern
+
+
 
 ---
 
