@@ -69,8 +69,13 @@ func Authenticate(flow interface {
 	ValidatePassword() error
 	EncryptPassword() error
 }) error {
-
+	// Run parallel, behind the scenes uses errgroup.Do
+	// Parallel(flow.DoSth)
+	
+	// First to execute wins
 	// Race(flow.doSth, flow.doSthElse)
+	
+	// Allow retries 
 	// Retry(flow.failsRandomly)
 	return Pipe(
 		flow.ValidateEmail,
@@ -107,3 +112,87 @@ func (i *authenticateImpl) EncryptPassword() error {
 	return nil
 }
 ```
+
+## Observability
+
+We can improve the pipe by 
+- logging the number of completed steps
+- logging the function name that fails
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+	"reflect"
+	"runtime"
+)
+
+func main() {
+	fmt.Println(Pipe(ValidateName))
+	fmt.Println()
+	
+	v := &validator{err: errors.New("invalid age")}
+	fmt.Println(Pipe(v.ValidateAge))
+	CreateUser(v)
+	fmt.Println()
+	
+	v = &validator{}
+	fmt.Println(Pipe(v.ValidateAge, ValidateName))
+	fmt.Println()
+	
+	CreateUser(v)
+}
+
+func CreateUser(flow interface {
+	ValidateAge() error
+}) error {
+	n, err := Pipe(flow.ValidateAge)
+	fmt.Println(n)
+	return err
+}
+
+func ValidateName() error { return errors.New("bad request") }
+
+type validator struct{ err error }
+
+func (v *validator) ValidateAge() error { return v.err }
+
+type PipeFn func() error
+
+func Pipe(fns ...PipeFn) (int, error) {
+	var count int
+	for _, fn := range fns {
+		if err := fn(); err != nil {
+			fmt.Println(GetFunctionName(fn))
+			return count, err
+		}
+		count++
+	}
+	return count, nil
+}
+
+func GetFunctionName(i interface{}) string {
+	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
+}
+```
+
+## Intermediate states
+
+- Intermediate states can be kept in `state` struct
+- Makes testing easier, since we can now debug each step/test each step individually
+- No longer a black box function with thousand lines, each step can report their own state
+
+## Testing
+
+- mocking and stubbing is much easier
+
+## Side-effects and Lazy-loading
+
+For fetching data lazily
+- side effects cannot be avoided, we still need them (can be data from external HTTP request or db)
+- however, there's no mutation involves, so they are only done outside of the flow
+- only queries are possible
+
+
