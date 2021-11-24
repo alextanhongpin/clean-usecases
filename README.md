@@ -196,3 +196,18 @@ For fetching data lazily
 - only queries are possible
 
 
+## How can we write leaner code?
+
+- reduce number of layers, packages, structs and type
+- abstraction over implementation
+- separate infrastructure concerns from business logic
+
+what layers we need
+- presentation
+- usecase
+- infrastructure (including repository)
+
+
+what layers to skip?
+- domain (?)
+
