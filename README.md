@@ -210,4 +210,7 @@ what layers we need
 
 what layers to skip?
 - domain (?)
+- https://www.waitingforcode.com/general-big-data/acid-2-0/read
+https://www.alibabacloud.com/blog/an-alibaba-cloud-technical-experts-insight-into-domain-driven-design-domain-primitive_596116
+https://www.alibabacloud.com/blog/how-to-code-complex-applications-core-java-technology-and-architecture_595506
 
