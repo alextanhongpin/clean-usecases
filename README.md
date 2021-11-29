@@ -214,3 +214,10 @@ what layers to skip?
 https://www.alibabacloud.com/blog/an-alibaba-cloud-technical-experts-insight-into-domain-driven-design-domain-primitive_596116
 https://www.alibabacloud.com/blog/how-to-code-complex-applications-core-java-technology-and-architecture_595506
 
+## Errors vs boolean
+
+Sometimes we just want to terminate the flow early, but not using the error.
+- use a sentinel error, e.g, ErrNoop to terminate early, but not handling this error later
+- boolean output could be stored and used for a more custom control flow
+- use pointer boolean instead to indicate everything is set
+- use constructors to ensure all input is set
