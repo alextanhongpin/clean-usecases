@@ -164,6 +164,7 @@ type PipeFn func() error
 func Pipe(fns ...PipeFn) (int, error) {
 	var count int
 	for _, fn := range fns {
+	// NOTE: Wrap the error in a pipe error with the steps and function name 
 		if err := fn(); err != nil {
 			fmt.Println(GetFunctionName(fn))
 			return count, err
