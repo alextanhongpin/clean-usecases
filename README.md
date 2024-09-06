@@ -222,3 +222,84 @@ Sometimes we just want to terminate the flow early, but not using the error.
 - boolean output could be stored and used for a more custom control flow
 - use pointer boolean instead to indicate everything is set
 - use constructors to ensure all input is set
+
+## With Context and Message Passing state
+
+```go
+// You can edit this code!
+// Click here and start typing.
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"strings"
+)
+
+func main() {
+	uc := new(LoginUsecase)
+	fmt.Println(uc.Do(context.Background(), LoginDto{Email: "john.appleseed@mail.com", Password: "123"}))
+	fmt.Println("Hello, 世界")
+}
+
+type LoginUsecase struct{}
+
+type State struct {
+	In LoginDto
+	Out string
+}
+
+type LoginDto struct {
+	Email    string
+	Password string
+}
+
+func (dto *LoginDto) Valid() error {
+	if dto.Email == "" || dto.Password == "" {
+		return errors.New("required")
+	}
+	return nil
+}
+
+func (uc *LoginUsecase) Do(ctx context.Context, in LoginDto) (string, error) {
+	if err := in.Valid(); err != nil {
+		return "", err
+	}
+	state := &State{In: in}
+	if err := uc.do(ctx, state); err != nil {
+		return "", err
+	}
+
+	return state.Out, nil
+}
+
+func (uc *LoginUsecase) do(ctx context.Context, state *State) error {
+	return Exec(ctx, state,
+		uc.DoA,
+		uc.DoB,
+	)
+}
+
+func (uc *LoginUsecase) DoA(ctx context.Context, state *State) error {
+	state.Out += " do_a"
+	return nil
+}
+
+func (uc *LoginUsecase) DoB(ctx context.Context, state *State) error {
+	state.Out += " do_b"
+	state.Out = strings.TrimSpace(state.Out)
+	return nil
+}
+
+type Step[T *V, V any] func(ctx context.Context, state T) error
+
+func Exec[T *V, V any](ctx context.Context, state T, steps ...Step[T, V]) error {
+	for _, step := range steps {
+		if err := step(ctx, state); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+```
