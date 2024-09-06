@@ -234,62 +234,110 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 )
 
 func main() {
-	uc := new(LoginUsecase)
-	fmt.Println(uc.Do(context.Background(), LoginDto{Email: "john.appleseed@mail.com", Password: "123"}))
+	uc := new(RegisterUsecase)
+	uc.repo = &mockRegisterRepo{}
+	uc.uow = &mockUnitOfWork{}
+	ctx := context.Background()
+	req := RegisterDto{Email: "john.appleseed@mail.com", Password: "123"}
+	fmt.Println(uc.Do(ctx, req))
 	fmt.Println("Hello, 世界")
 }
 
-type LoginUsecase struct{}
-
-type State struct {
-	In LoginDto
-	Out string
+type CreateUserRequest struct {
+	Email             string
+	EncryptedPassword string
 }
 
-type LoginDto struct {
+type User struct {
+	Name string
+}
+
+type registerRepository interface {
+	CreateUser(ctx context.Context, params CreateUserRequest) (*User, error)
+}
+
+type RegisterUsecase struct {
+	repo registerRepository
+	uow  unitOfWork
+}
+
+type State struct {
+	In                RegisterDto
+	EncryptedPassword string
+	User              result[*User]
+}
+
+type result[T any] struct {
+	data T
+	err  error
+}
+
+func makeResult[T any](v T, err error) result[T] {
+	return result[T]{
+		data: v,
+		err:  err,
+	}
+}
+
+func (r *result[T]) Unwrap() (T, error) {
+	return r.data, r.err
+}
+
+type RegisterDto struct {
 	Email    string
 	Password string
 }
 
-func (dto *LoginDto) Valid() error {
+func (dto *RegisterDto) Valid() error {
 	if dto.Email == "" || dto.Password == "" {
 		return errors.New("required")
 	}
 	return nil
 }
 
-func (uc *LoginUsecase) Do(ctx context.Context, in LoginDto) (string, error) {
+func Tx[T *V, V any](ctx context.Context, uow unitOfWork, state T, steps ...Step[T, V]) Step[T, V] {
+	return func(ctx context.Context, state T) error {
+		return uow.RunInTx(ctx, func(ctx context.Context) error {
+			return Exec(ctx, state, steps...)
+		})
+	}
+}
+
+func (uc *RegisterUsecase) Do(ctx context.Context, in RegisterDto) (*User, error) {
 	if err := in.Valid(); err != nil {
-		return "", err
+		return nil, err
 	}
 	state := &State{In: in}
-	if err := uc.do(ctx, state); err != nil {
-		return "", err
+	if err := Exec(ctx, state,
+		uc.EncryptPassword,
+		uc.CreateUser,
+		Tx(ctx, uc.uow, state,
+			uc.EncryptPassword,
+			uc.CreateUser,
+		),
+	); err != nil {
+		return nil, err
 	}
 
-	return state.Out, nil
+	return state.User.Unwrap()
 }
 
-func (uc *LoginUsecase) do(ctx context.Context, state *State) error {
-	return Exec(ctx, state,
-		uc.DoA,
-		uc.DoB,
-	)
-}
-
-func (uc *LoginUsecase) DoA(ctx context.Context, state *State) error {
-	state.Out += " do_a"
+func (uc *RegisterUsecase) EncryptPassword(ctx context.Context, state *State) error {
+	fmt.Println("encrypt password")
+	state.EncryptedPassword = "encrypted:" + state.In.Password
 	return nil
 }
 
-func (uc *LoginUsecase) DoB(ctx context.Context, state *State) error {
-	state.Out += " do_b"
-	state.Out = strings.TrimSpace(state.Out)
-	return nil
+func (uc *RegisterUsecase) CreateUser(ctx context.Context, state *State) error {
+	fmt.Println("")
+	state.User = makeResult(uc.repo.CreateUser(ctx, CreateUserRequest{
+		Email:             state.In.Email,
+		EncryptedPassword: state.EncryptedPassword,
+	}))
+	return state.User.err
 }
 
 type Step[T *V, V any] func(ctx context.Context, state T) error
@@ -302,4 +350,35 @@ func Exec[T *V, V any](ctx context.Context, state T, steps ...Step[T, V]) error 
 	}
 	return nil
 }
+
+func Chain[T *V, V any](ctx context.Context, state T, steps ...Step[T, V]) Step[T, V] {
+	return func(ctx context.Context, state T) error {
+		for _, s := range steps {
+			if err := s(ctx, state); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+}
+
+type unitOfWork interface {
+	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
+}
+
+type mockRegisterRepo struct{}
+
+func (r *mockRegisterRepo) CreateUser(ctx context.Context, params CreateUserRequest) (*User, error) {
+	return &User{
+		Name: "john",
+	}, nil
+}
+
+type mockUnitOfWork struct{}
+
+func (uow *mockUnitOfWork) RunInTx(ctx context.Context, fn func(context.Context) error) error {
+	return fn(ctx)
+}
+
 ```
