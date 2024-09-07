@@ -382,3 +382,10 @@ func (uow *mockUnitOfWork) RunInTx(ctx context.Context, fn func(context.Context)
 }
 
 ```
+
+
+## When to use it
+
+Never. Although a lot of things can be anstracted, the control flow probably shouldn't.
+
+Also, it limits the way we write code, and stuff like defer becomes hard to add.
